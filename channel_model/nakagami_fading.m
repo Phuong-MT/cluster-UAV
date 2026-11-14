@@ -1,7 +1,5 @@
 function amp = nakagami_fading(m, sz)
     % NAKAGAMI_FADING - Phiên bản chính xác tương đương với Python
-    % Tương đương với: scipy.stats.nakagami.rvs(m, scale=1.0/np.sqrt(m))
-    
     % --- Xử lý tham số đầu vào ---
     if nargin < 2
         sz = 1;
@@ -9,21 +7,13 @@ function amp = nakagami_fading(m, sz)
     if length(sz) == 1
         sz = [sz, sz];
     end
-    
-    % --- Các tham số tương đương Python ---
-    % Code Python dùng scale = 1/sqrt(m),
-    % Tức là công suất trung bình E[R^2] = scale^2 = 1/m.
     % Ta gọi đây là omega (công suất trung bình mong muốn).
-    omega = 1/m;
+    omega = 1;
     
     % --- Mối quan hệ Nakagami-Gamma ---
     % Nếu R ~ Nakagami(m, omega)
     % thì R^2 ~ Gamma(m, theta = omega/m)
-    %
-    % Vì vậy, ta cần tạo biến Y ~ Gamma(m, theta) và lấy amp = sqrt(Y).
-    
-    % Tính tham số scale 'theta' của phân phối Gamma
-    theta = omega / m;  % Tương đương: 1 / (m*m)
+    theta = omega / m;  % Tương đương: 1 / (m)
     
     % --- Tạo các mẫu Gamma ---
     % Tạo các mẫu Gamma(m, 1) và nhân với theta.

@@ -85,11 +85,12 @@ function [best_solution, convergence, best_obj] = run_rcga(dim, obj_func, max_fe
                 parent_id = randi(pop_size);
             end
 
-            combined_count = combined_count + 1;
-            combined_offspring(combined_count, :) = pre_jump_candidate;
-            combined_offspring_fitness(combined_count) = obj_func(pre_jump_candidate);
+            % Ghi đè cá thể sau mutation vào đúng vị trí i của crossover
+            combined_offspring(i, :) = pre_jump_candidate;
+            combined_offspring_fitness(i) = obj_func(pre_jump_candidate);
             count_fes = count_fes+1;
 
+            % Quantum-jumping sinh ra cá thể mới và nối thêm vào cuối mảng kết hợp
             if stagnation_gen >= stagnation_threshold && objective(parent_id) <= median_obj
                 p_jump = min(jump_max_rate, jump_base_rate + jump_gain * (stagnation_gen - stagnation_threshold));
                 if rand < p_jump
