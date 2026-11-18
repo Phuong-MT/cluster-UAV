@@ -9,8 +9,8 @@ H_min = 100; H_max = 300; BS_pos = [0, 0, 30];
 % PL tham chiếu 1 m (c/(4*pi*fc))^2 được áp dụng trong compute_*_hop_gains.m
 alpha1 = 2.2;   % BS->UAV: UMa-AV LoS, PL = 28 + 22log10(d) + 20log10(fc)
 alpha2 = 2.5;   % UAV->UE: air-to-ground, gần LoS
-K_R = 5; mm = 3;
-I_max = 1; gamma_th = 1.0; beta = 0; P_th = 0.1;
+K_R = 15; mm = 3;
+I_max = 1; gamma_th = 0.2; beta = 0; P_th = 0.1;
 B_bs = 50; B_uav = 1.08;   % MHz: NR FR1 50 MHz backhaul; UAV->UE = 6 PRB LTE-M (1.08 MHz)
 
 % --- Công suất phát ---
@@ -32,16 +32,21 @@ MAX_FES = generation * POP_SIZE;
 iters = round(MAX_FES / POP_SIZE);
 
 % Bật/tắt từng thuật toán
-RUN_IDE = true;
-RUN_RGA = true;
-RUN_PSO = true;
-RUN_GAQJ = true;
+RUN_IDE = false;
+RUN_RGA = false;
+RUN_PSO = false;
+RUN_GAQJ = false;
 
 RUN_FIXED = true;
 RUN_DYNAMIC = true;
 
 % Tùy chọn hiển thị thêm biểu đồ kép Boxplot Sum-Rate vs Average Runtime
 SHOW_DUAL_AXIS_PLOT = true;
+
+% Khai báo 2 biến global lưu mẫu small-scale Rician fading cho chặng 1 và chặng 2.
+% Giúp cố định trạng thái fading trong mỗi Run để các thuật toán tối ưu hội tụ
+% chính xác theo Path Loss (tọa độ UAV) thay vì nhảy ngẫu nhiên ở mỗi lần gọi fobj.
+global CURRENT_RIC_POW1 CURRENT_RIC_POW2;
 
 % 3N vị trí UAV + M association + M power UE
 dim = N * 3 + 2 * M; 
@@ -83,6 +88,10 @@ for run = 1:NUM_RUNS
     
     % Vị trí thiết bị người dùng độc lập cho mỗi run
     UE_positions = generate_positions_3d(M, L, 0, true);
+
+    % Sinh mẫu công suất fading Rician (small-scale fading) cố định cho Run hiện tại
+    CURRENT_RIC_POW1 = rician_fading(K_R, [N, 1]).^2;
+    CURRENT_RIC_POW2 = rician_fading(K_R, [N, M]).^2;
     
     % Metaheuristic hàm mục tiêu        
     fobj = @(x, varargin) decode_and_calc_by_option(x, 3, N, M, L, H_max, H_min, UE_positions, BS_pos, ...

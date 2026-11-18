@@ -2,15 +2,15 @@ clear; clc;
 addpath(genpath(pwd));
 
 %% 1. Cấu hình Tham số
-N = 20;                          % Số UAV cố định
-M_list = 30:2:40;               % Các giá trị số UE cần quét (trục x)
-L = 1000; 
+N = 5;                          % Số UAV cố định
+M_list = 10:2:20;               % Các giá trị số UE cần quét (trục x)
+L = 3000; 
 H_min = 100; H_max = 300; BS_pos = [0, 0, 30];
 % --- Kênh truyền (3GPP TR 36.777 / TR 38.901, fc = 2 GHz) ---
 alpha1 = 2.2;   % BS->UAV: UMa-AV LoS
 alpha2 = 2.5;   % UAV->UE: air-to-ground, gần LoS
 K_R = 5; mm = 3;
-I_max = 1; gamma_th = 1.0; beta = 0; P_th = 0.1;
+I_max = 1; gamma_th = 0.2; beta = 0; P_th = 0.1;
 B_bs = 50; B_uav = 1.08;   % MHz
 
 % --- Công suất phát ---
@@ -31,10 +31,10 @@ NUM_RUNS = 30; VERBOSE = false;
 MAX_FES = generation * POP_SIZE;
 
 % Bật/tắt từng thuật toán
-RUN_IDE = false;
-RUN_RGA = false;
-RUN_PSO = false;
-RUN_GAQJ = false;
+RUN_IDE = true;
+RUN_RGA = true;
+RUN_PSO = true;
+RUN_GAQJ = true;
 
 RUN_FIXED = true;
 RUN_DYNAMIC = true;
@@ -44,7 +44,13 @@ SAVE_RESULTS = false;
 SAVE_FILE = 'results_increase_UE.mat';
 
 % Vẽ đồ thị trung gian mỗi PLOT_EVERY runs (và ở run cuối cùng)
-PLOT_EVERY = 15;
+PLOT_EVERY = 5;
+
+% Khai báo 2 biến global lưu mẫu small-scale Rician fading cho chặng 1 và chặng 2.
+% Việc cố định mẫu fading trong mỗi (run, M) giúp hàm mục tiêu fobj(x) không bị
+% nhảy ngẫu nhiên qua 400,000 lần đánh giá FES và đảm bảo mọi thuật toán
+% đều được so sánh trên cùng một trạng thái kênh truyền vật lý.
+global CURRENT_RIC_POW1 CURRENT_RIC_POW2;
 
 num_M = numel(M_list);
 
@@ -65,7 +71,7 @@ fit_dynamic = NaN(num_M, NUM_RUNS);
 % (để tại mốc Run = 5, 10, ... đã có đủ dữ liệu cho mọi giá trị M)
 for run = 1:NUM_RUNS
     fprintf('==================== Run %d/%d ====================\n', run, NUM_RUNS);
-
+    UE_positions_all = generate_positions_3d(max(M_list), L, 0, true);
     for iM = 1:num_M
         M = M_list(iM);
         % 3N vị trí UAV + M association + M power UE
@@ -73,7 +79,13 @@ for run = 1:NUM_RUNS
         t_run = tic;
 
         % Vị trí UE độc lập cho mỗi (run, M)
-        UE_positions = generate_positions_3d(M, L, 0, true);
+        UE_positions = UE_positions_all(1:M, :);
+
+        % Sinh mẫu công suất fading Rician (small-scale fading) cố định cho kịch bản (run, M) hiện tại.
+        % Khi các thuật toán tối ưu dịch chuyển UAV, chỉ có Path Loss thay đổi theo khoảng cách 3D,
+        % còn mẫu fading quy mô nhỏ này được giữ cố định trong suốt quá trình tìm kiếm của (run, M).
+        CURRENT_RIC_POW1 = rician_fading(K_R, [N, 1]).^2;
+        CURRENT_RIC_POW2 = rician_fading(K_R, [N, M]).^2;
 
         fobj = @(x, varargin) decode_and_calc_by_option(x, 3, N, M, L, H_max, H_min, UE_positions, BS_pos, ...
                 alpha1, alpha2, K_R, mm, P_bs, P_total, sigma_b2, sigma2, I_max, gamma_th, beta, P_th, B_bs, B_uav, varargin{:});

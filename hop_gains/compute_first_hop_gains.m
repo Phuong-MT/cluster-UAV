@@ -15,6 +15,17 @@ function first_hop_gains = compute_first_hop_gains(UAV_positions, BS_pos, alpha1
 
     % Phép toán .^ và .* là element-wise (theo từng phần tử)
     pl_bs = PL0 * dist_bs.^(-alpha1);
-    ric_amp = rician_fading(K_R, [N, 1]);
-    first_hop_gains = (ric_amp.^2) .* pl_bs;
+
+    % Dùng mẫu fading quy mô nhỏ (small-scale fading) cố định trong mỗi Run
+    % qua biến global CURRENT_RIC_POW1 để hàm mục tiêu fobj(x) là hàm xác định
+    % khi các thuật toán tối ưu tìm kiếm tọa độ UAV, đồng thời đảm bảo công bằng
+    % giữa các thuật toán trong cùng một Run. Nếu không khai báo global thì tự sinh mới.
+    global CURRENT_RIC_POW1;
+    if ~isempty(CURRENT_RIC_POW1) && size(CURRENT_RIC_POW1, 1) >= N
+        ric_pow = CURRENT_RIC_POW1(1:N, 1);
+    else
+        ric_amp = rician_fading(K_R, [N, 1]);
+        ric_pow = ric_amp.^2;
+    end
+    first_hop_gains = ric_pow .* pl_bs;
 end
