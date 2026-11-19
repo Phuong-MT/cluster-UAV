@@ -2,14 +2,14 @@ clear; clc;
 addpath(genpath(pwd));
 
 %% 1. Cấu hình Tham số
-N = 25; M = 40;
-L = 1000; 
+N = 5; M = 20;
+L = 4000; 
 H_min = 100; H_max = 300; BS_pos = [0, 0, 30];
 % --- Kênh truyền (3GPP TR 36.777 / TR 38.901, fc = 2 GHz) ---
 % PL tham chiếu 1 m (c/(4*pi*fc))^2 được áp dụng trong compute_*_hop_gains.m
 alpha1 = 2.2;   % BS->UAV: UMa-AV LoS, PL = 28 + 22log10(d) + 20log10(fc)
 alpha2 = 2.5;   % UAV->UE: air-to-ground, gần LoS
-K_R = 15; mm = 3;
+K_R = 5; mm = 3;
 I_max = 1; gamma_th = 0.2; beta = 0; P_th = 0.1;
 B_bs = 50; B_uav = 1.08;   % MHz: NR FR1 50 MHz backhaul; UAV->UE = 6 PRB LTE-M (1.08 MHz)
 
@@ -25,8 +25,8 @@ sigma_b2 = 10^((-174 + 10*log10(B_bs*1e6)  + NF_uav - 30)/10);  % ≈ -90 dBm @ 
 sigma2   = 10^((-174 + 10*log10(B_uav*1e6) + NF_ue  - 30)/10);  % ≈ -105 dBm @ 1.08 MHz
 
 % Cấu hình thuật toán
-POP_SIZE = 50;
-generation = 8000;
+POP_SIZE = 30;
+generation = 5000;
 NUM_RUNS = 30; VERBOSE = false;
 MAX_FES = generation * POP_SIZE;
 iters = round(MAX_FES / POP_SIZE);
@@ -35,7 +35,7 @@ iters = round(MAX_FES / POP_SIZE);
 RUN_IDE = false;
 RUN_RGA = false;
 RUN_PSO = false;
-RUN_GAQJ = false;
+RUN_GAQJ = true;
 
 RUN_FIXED = true;
 RUN_DYNAMIC = true;

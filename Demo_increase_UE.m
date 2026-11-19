@@ -4,7 +4,7 @@ addpath(genpath(pwd));
 %% 1. Cấu hình Tham số
 N = 5;                          % Số UAV cố định
 M_list = 10:2:20;               % Các giá trị số UE cần quét (trục x)
-L = 3000; 
+L = 4500; 
 H_min = 100; H_max = 300; BS_pos = [0, 0, 30];
 % --- Kênh truyền (3GPP TR 36.777 / TR 38.901, fc = 2 GHz) ---
 alpha1 = 2.2;   % BS->UAV: UMa-AV LoS
